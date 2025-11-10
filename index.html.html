@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Absensi Kelas</title>
+
+<!-- HTTPS wajib untuk GitHub Pages -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+    body{font-family:Arial;padding:20px;background:#aaa;}
+    table{width:100%;border-collapse:collapse;margin-top:20px;background:white;}
+    th,td{border:1px solid #aaa;padding:10px;text-align:center;}
+    button{padding:6px 12px;margin:2px;}
+    h2{text-align:center;} 
+    h3{text-align:center;font-size:32px;margin-top:-10px;margin-bottom:20px;font-weight:bold;}
+    #names{display:none;} 
+</style>
+</head>
+<body>
+
+<h2>Absensi Kelas Hari Ini</h2>
+<h3>ISICODE</h3>
+
+<input id="names" style="width:100%;padding:6px;" 
+value="Isnain Siayf Saifullah,Kristoforus Renggo,Filomena Salsagus Muhtri,Aldinan Moa,Mariana Sania Laura Kartini,Ade Fatima Nadia,Bergita Astiana Jelita,Timotius Dandi Jelaha,Yohana Febronia Dima,Bonevantura Jas,Oktavianus Jedaut,Maria Ekawati Jimi,Fransiskus Nono,Roberto Florio Tito Tarang,Venansius Jehaut">
+
+<br><br>
+<button onclick="generate()">Mulai Absensi</button>
+
+<div id="area"></div>
+
+<script>
+let data=[];
+
+function generate(){
+    data = document.getElementById("names").value
+            .split(",")
+            .map(n=>({nama:n.trim(),status:"-"}));
+    render();
+}
+
+function setStatus(i,st){
+    data[i].status = st;
+    render();
+}
+
+function render(){
+    let html = `
+    <table><tr><th>No</th><th>Nama</th><th>Status</th><th>Aksi</th></tr>`;
+    data.forEach((d,i)=>{
+        html+=`
+        <tr>
+            <td>${i+1}</td>
+            <td>${d.nama}</td>
+            <td>${d.status}</td>
+            <td>
+                <button onclick="setStatus(${i},'Hadir')">Hadir</button>
+                <button onclick="setStatus(${i},'Alpa')">Alpa</button>
+                <button onclick="setStatus(${i},'Izin')">Izin</button>
+             </td>
+        </tr>`;
+    });
+    html+=`</table><br>
+    <button onclick="exportPDF()">Export PDF</button>
+    `;
+    document.getElementById("area").innerHTML=html;
+}
+
+function exportPDF(){
+    const { jsPDF } = window.jspdf;
+    let pdf = new jsPDF();
+    pdf.setFontSize(14);
+
+    // Judul
+    let title = "Absensi Kelas Hari Ini";
+    let pageWidth = pdf.internal.pageSize.getWidth();
+    let textWidth = pdf.getTextWidth(title);
+    let x = (pageWidth - textWidth) / 2;
+    pdf.text(title, x, 15);
+
+    // ISICODE - bawah judul
+    pdf.setFontSize(16);
+    let brand = "ISICODE";
+    let w2 = pdf.getTextWidth(brand);
+    let x2 = (pageWidth - w2) / 2;
+    pdf.text(brand, x2, 22);
+
+    // Tanggal otomatis
+    let now = new Date();
+    let options = { day:'numeric', month:'long', year:'numeric' };
+    let tanggal = now.toLocaleDateString('id-ID', options);
+
+    pdf.setFontSize(12);
+    pdf.text("Tanggal : " + tanggal, 14, 32);
+
+    let y = 45;
+    data.forEach((d,i)=>{
+        pdf.text((i+1)+". "+d.nama+" - "+d.status, 14, y);
+        y+=8;
+    });
+
+    pdf.save("absensi.pdf");
+}
+</script>
+</body>
+</html>
